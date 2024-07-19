@@ -84,12 +84,7 @@ class Post(PublishedCreatedModel):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.pk})
-
-    def comment_count(self):
-        return Comment.objects.filter(
-            post=self.id
-        ).count()
+        return reverse('blog:post_detail', kwargs={'post_id': self.pk})
 
 
 class Comment(models.Model):
@@ -104,6 +99,10 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('created_at',)
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def get_absolute_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.post_id})
+        return reverse('blog:post_detail',
+                       kwargs={'post_id': self.post_id}
+                       )
