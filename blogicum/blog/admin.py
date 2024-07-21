@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Location, Post
+from .models import Category, Comment, Location, Post
 
 
 class PostInline(admin.TabularInline):
@@ -64,6 +64,20 @@ class PostAdmin(admin.ModelAdmin):
     list_display_links = ('title',)
 
 
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        'pk',
+        'text',
+        'post',
+        'created_at',
+        'author',
+    )
+    list_editable = (
+        'text',
+    )
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Post, PostAdmin)
+admin.site.register(Comment, CommentAdmin)

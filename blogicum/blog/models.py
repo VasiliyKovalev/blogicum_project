@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.urls import reverse
 
 from core.models import PublishedCreatedModel
 
@@ -83,9 +82,6 @@ class Post(PublishedCreatedModel):
     def __str__(self):
         return self.title
 
-    def get_absolute_url(self):
-        return reverse('blog:post_detail', kwargs={'post_id': self.pk})
-
 
 class Comment(models.Model):
     text = models.TextField('Текст комментария')
@@ -95,14 +91,16 @@ class Comment(models.Model):
         related_name='comments',
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
 
     class Meta:
         ordering = ('created_at',)
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
 
-    def get_absolute_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'post_id': self.post_id}
-                       )
+    def __str__(self):
+        return f'{self.author} к посту "{self.post}"'
