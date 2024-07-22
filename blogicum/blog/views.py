@@ -1,10 +1,9 @@
-from datetime import datetime
-
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
@@ -24,7 +23,7 @@ def get_posts_queryset(published=False, with_comments_count=False):
     )
     if published:
         posts = posts.filter(
-            pub_date__lte=datetime.now(),
+            pub_date__lte=timezone.now(),
             is_published=True,
             category__is_published=True
         )
@@ -46,9 +45,14 @@ class OnlyAuthorMixin(UserPassesTestMixin):
 
 
 class HomePageListView(ListView):
-    queryset = get_posts_queryset(published=True, with_comments_count=True)
     template_name = 'blog/index.html'
     paginate_by = NUM_POSTS_ON_PAGE
+
+    def get_queryset(self):
+        return get_posts_queryset(
+            published=True,
+            with_comments_count=True
+        )
 
 
 class CategoryPostsListView(ListView):
@@ -95,16 +99,14 @@ class UserListView(ListView):
         )
 
     def get_queryset(self):
-        if self.request.user.username == self.kwargs['username']:
-            posts = get_posts_queryset(
-                with_comments_count=True
-            )
-        else:
-            posts = get_posts_queryset(
-                published=True,
-                with_comments_count=True
-            )
-        return posts.filter(author=self.get_user_object())
+        return get_posts_queryset(
+            published=(
+                self.request.user != self.get_user_object()
+            ),
+            with_comments_count=True
+        ).filter(
+            author=self.get_user_object()
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -147,7 +149,7 @@ class PostDetailView(DetailView):
     def get_object(self, queryset=None):
         post = super().get_object(queryset)
         if self.request.user != post.author and (
-            post.pub_date.timestamp() > datetime.now().timestamp()
+            post.pub_date > timezone.now()
             or not post.is_published
             or not post.category.is_published
         ):
@@ -204,7 +206,7 @@ class PostDeleteView(
         return context
 
 
-class CommentMixin():
+class CommentMixin:
     model = Comment
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
