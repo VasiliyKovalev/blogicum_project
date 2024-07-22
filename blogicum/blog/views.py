@@ -45,14 +45,12 @@ class OnlyAuthorMixin(UserPassesTestMixin):
 
 
 class HomePageListView(ListView):
+    queryset = get_posts_queryset(
+        published=True,
+        with_comments_count=True
+    )
     template_name = 'blog/index.html'
     paginate_by = NUM_POSTS_ON_PAGE
-
-    def get_queryset(self):
-        return get_posts_queryset(
-            published=True,
-            with_comments_count=True
-        )
 
 
 class CategoryPostsListView(ListView):
